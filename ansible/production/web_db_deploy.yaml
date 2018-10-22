@@ -1,0 +1,26 @@
+---
+- hosts: webservers
+  sudo: yes
+
+  tasks:
+  - name: Ensure that Apache is installed
+    yum: name=httpd state=present
+
+  - name: Start Apache Service
+    service: name=httpd enabled=yes state=started
+
+- hosts: dbservers
+  sudo: yes
+
+  tasks:
+  - name: Ensure MySql is installed
+    yum: name=mariadb-server state=present
+  - name: Start mariadb-server
+    service: name=mariadb state=started
+
+- hosts: dbservers:webservers
+  sudo: yes
+
+  tasks:
+  - name: Ensure MySql is installed
+    service: name=firewalld state=stopped

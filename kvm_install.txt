@@ -142,8 +142,20 @@ NETMASK="255.255.255.0"
 
 [root@linuxtechi ~]# 
 virt-install --name="centoskvm1" --file=/mnt/vmdisk/centosvm1.dsk --file-size=100 --nonsparse --graphics none --vcpus=1 --ram=2048 -l=/mnt/iso/CentOS-7-x86_64-Minimal-1804.iso --network bridge=br0 --os-type=linux --os-variant=generic
+
+virt-install --name="centoskvm1" --file=/mnt/vmdisk/centosvm1.dsk --file-size=100 --nonsparse --graphics spice --vcpus=1 --ram=2048 -l=/mnt/iso/CentOS-7-x86_64-Minimal-1804.iso --network bridge=br0 --os-type=linux --os-variant=generic
 virt-install --name="centoskvm2" --file=/mnt/vmdisk/centosvm2.dsk --file-size=100 --nonsparse --graphics spice --vcpus=1 --ram=2048 -l=/mnt/iso/CentOS-7-x86_64-Minimal-1804.iso --network bridge=br0 --os-type=linux --os-variant=generic
 
+virt-manager
+
+virsh undefine centoskvm1
+
+https://lintut.com/how-to-setup-network-after-rhelcentos-7-minimal-installation/
+https://lintut.com/how-to-configure-static-ip-address-on-centos-7/
+
+
+centoskvm1 192.168.86.36
+centoskvm2 192.168.86.26
 
 
 –name = <Name of the Virtual Machine>
@@ -157,4 +169,60 @@ virt-install --name="centoskvm2" --file=/mnt/vmdisk/centosvm2.dsk --file-size=10
 –network = < it is used to specify which network we will use for the virtual machine, in this example I am bridge interface>
 –os-type = < Operating system type like linux and window>
 –os-variant= <KVM maintains the OS variants like ‘fedora18′, ‘rhel6’ and ‘winxp’ , this option is optional and if you not sure about OS variant you can mentioned it as generic>
+
+virsh
+
+
+
+
+====================== Ansible
+sudo yum install epel-release
+sudo yum install ansible
+
+
+vi invertory
+[servers]
+centoskvm1 ansible_ssh_host=192.168.86.36
+centoskvm2 ansible_ssh_host=192.168.86.26
+
+[webservers]
+centoskvm1
+
+[dc:children]
+webservers
+
+[dc:vars]
+ansible_ssh_user=root
+ansible_ssh_pass=bilbo000
+
+
+using new structure
+
+ansible webservers -i inventory_prod -m user -a "name={{username}} password=12345"
+
+
+https://docs.ansible.com/ansible/latest/installation_guide/intro_configuration.html
+https://docs.ansible.com/ansible/latest/reference_appendices/config.html#ansible-configuration-settings-locations
+ansible config order (first one wins)
+#ANSIBLE_CONFIG
+./ansible.config~/.ansible.config
+/etc/ansible/ansible.cfg
+
+can override specfic settings in environment vars $ANSIBLE_<setting>=??
+use export 
+export ANSIBLE_FORKS=10
+
+
+yum -a "name=httpd state=present" --sudo
+ansible webservers -i inventory_prod -m service -a "name=httpd state=started enabled=yes" --sudo
+
+ansible webservers -i inventory_prod -m service -a "name=iptables state=stopped"
+ansible webservers -i inventory_prod -m service -a "name=firewalld state=stopped"
+
+
+ ansible dc -i inventwebservers -i inventory_prod -m setup -a"filter=ansible_mounts"
+ ansible dc -i inventory_prod -m setup --tree ./setup
+
+
+
 

@@ -1,0 +1,17 @@
+[servers]
+centoskvm1 ansible_ssh_host=192.168.86.36
+centoskvm2 ansible_ssh_host=192.168.86.26
+
+[webservers]
+centoskvm1
+
+[dbservers]
+centoskvm2
+
+[dc:children]
+webservers
+dbservers
+
+[dc:vars]
+ansible_ssh_user=root
+ansible_ssh_pass=bilbo000
