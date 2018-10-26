@@ -143,6 +143,8 @@ NETMASK="255.255.255.0"
 [root@linuxtechi ~]# 
 virt-install --name="centoskvm1" --file=/mnt/vmdisk/centosvm1.dsk --file-size=100 --nonsparse --graphics none --vcpus=1 --ram=2048 -l=/mnt/iso/CentOS-7-x86_64-Minimal-1804.iso --network bridge=br0 --os-type=linux --os-variant=generic
 
+virt-install --name="centoskvm3" --file=/mnt/vmdisk/centosvm3.dsk --file-size=100 --nonsparse --graphics none --vcpus=1 --ram=1024 --location=/mnt/iso/CentOS-7-x86_64-Minimal-1804.iso --network bridge=br0 --os-type=linux --os-variant=centos7.0 --extra-args="console=tty0 console=ttyS0,115200"
+
 virt-install --name="centoskvm1" --file=/mnt/vmdisk/centosvm1.dsk --file-size=100 --nonsparse --graphics spice --vcpus=1 --ram=2048 -l=/mnt/iso/CentOS-7-x86_64-Minimal-1804.iso --network bridge=br0 --os-type=linux --os-variant=generic
 virt-install --name="centoskvm2" --file=/mnt/vmdisk/centosvm2.dsk --file-size=100 --nonsparse --graphics spice --vcpus=1 --ram=2048 -l=/mnt/iso/CentOS-7-x86_64-Minimal-1804.iso --network bridge=br0 --os-type=linux --os-variant=generic
 
@@ -173,6 +175,17 @@ centoskvm2 192.168.86.26
 virsh
 
 
+find ips for vms
+https://unix.stackexchange.com/questions/33191/how-to-find-the-ip-address-of-a-kvm-virtual-machine-that-i-can-ssh-into-it
+
+yum install nmap
+
+virsh domiflist centoskvm2
+nmap -sP 192.168.86.0/24 | grep  52:54:00:be:63:40 -B 3 -i
+
+$ arp -n
+
+If arp isn't installed on your system just install the net-tools package.
 
 
 ====================== Ansible
