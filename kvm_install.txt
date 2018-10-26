@@ -139,7 +139,22 @@ IPADDR="192.168.86.39"
 NETMASK="255.255.255.0"
 
 
+I didn't do 3 and 4
+3. Enable network forwarding. Add to /etc/sysctl.conf :
+ 
+ 
+net.ipv4.ip_forward = 1 
+ 
+And read the file: 
+ 
+# sysctl -p /etc/sysctl.conf 
+ 
+4. Restart the ‘NetworkManager’ service so that the bridge you just created can get an IP address: 
+# systemctl restart NetworkManager 
 
+see whitepaper on kickstart files pdf in git.
+sample kickstart files
+https://github.com/CentOS/Community-Kickstarts/blob/5b4f7724d1b1df920da6051192b7bb0ca67d3299/kvm-host.cfg
 [root@linuxtechi ~]# 
 virt-install --name="centoskvm1" --file=/mnt/vmdisk/centosvm1.dsk --file-size=100 --nonsparse --graphics none --vcpus=1 --ram=2048 -l=/mnt/iso/CentOS-7-x86_64-Minimal-1804.iso --network bridge=br0 --os-type=linux --os-variant=generic
 
@@ -173,6 +188,12 @@ centoskvm2 192.168.86.26
 –os-variant= <KVM maintains the OS variants like ‘fedora18′, ‘rhel6’ and ‘winxp’ , this option is optional and if you not sure about OS variant you can mentioned it as generic>
 
 virsh
+
+
+If you do not have an X server running on your host, connecting to a VMs serial console might be the only way to login to a VM if networking is not available. Setting up access to a VM’s console is no different than in a physical server, where you simply add the proper kernel boot parameters to the VM. For example, for a RHEL VM, append the following parameters to the kernel boot line in /etc/grub.conf
+ and then reboot the VM: 
+ 
+console=tty0 console=ttyS0,115200 
 
 
 find ips for vms
