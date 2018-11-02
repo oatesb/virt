@@ -1,0 +1,119 @@
+ 
+ https://www.tecmint.com/install-pxe-network-boot-server-in-centos-7/
+ 
+ yum install dnsmasq
+
+mv /etc/dnsmasq.conf  /etc/dnsmasq.conf.backup
+nano /etc/dnsmasq.conf
+
+
+
+
+interface=eth0,lo
+#bind-interfaces
+#domain=centos7.lan
+# DHCP range-leases
+dhcp-range= eth0,192.168.86.10,192.168.86.14,255.255.255.0,1h
+# PXE
+dhcp-boot=pxelinux.0,pxeserver,192.168.86.33
+# Gateway
+dhcp-option=3,192.168.86.1
+# DNS
+dhcp-option=6,92.168.86.1
+#server=8.8.4.4
+# Broadcast Address
+#dhcp-option=28,10.0.0.255
+# NTP Server
+dhcp-option=42,0.0.0.0
+
+pxe-prompt="Press F8 for menu.", 60
+pxe-service=x86PC, "Install CentOS 7 from network server 192.168.86.33", pxelinux
+enable-tftp
+tftp-root=/var/lib/tftpboot
+
+yum install syslinux
+
+ls /usr/share/syslinux
+
+yum install tftp-server
+cp -r /usr/share/syslinux/* /var/lib/tftpboot
+
+mkdir /var/lib/tftpboot/pxelinux.cfg
+touch /var/lib/tftpboot/pxelinux.cfg/default
+
+
+#note that all paths used in this file must be relative to the /var/lib/tftpboot directory.
+vi /var/lib/tftpboot/pxelinux.cfg/default
+
+
+# hangs on all but the VNC method... how to config to txt only? console=tty0 console=ttyS0,115200???
+default menu.c32
+prompt 0
+timeout 300
+ONTIMEOUT local
+
+menu title ########## PXE Boot Menu ##########
+
+label 1
+menu label ^1) Install CentOS 7 x64 with Local Repo
+kernel centos7/vmlinuz
+append initrd=centos7/initrd.img method=ftp://192.168.86.33/pub devfs=nomount
+
+label 2
+menu label ^2) Install CentOS 7 x64 with http://mirror.centos.org Repo
+kernel centos7/vmlinuz
+append initrd=centos7/initrd.img method=http://mirror.centos.org/centos/7/os/x86_64/ devfs=nomount ip=dhcp
+
+label 3
+menu label ^3) Install CentOS 7 x64 with Local Repo using VNC
+kernel centos7/vmlinuz
+append  initrd=centos7/initrd.img method=ftp://192.168.86.33/pub devfs=nomount inst.vnc inst.vncpassword=password
+
+label 4
+menu label ^4) Boot from local drive
+
+
+yum install wget
+
+
+cd ~
+mkdir iso
+cd iso
+#min - no pxeboot folder =(
+#wget http://ftp.osuosl.org/pub/centos-altarch/7.5.1804/isos/ppc64le/CentOS-7-ppc64le-Minimal-1804.iso
+wget http://repo1.sea.innoscale.net/centos/7.5.1804/isos/x86_64/CentOS-7-x86_64-DVD-1804.iso
+
+mount -t iso9660 -o loop ~/iso/CentOS-7-x86_64-DVD-1804.iso /mnt
+
+
+mkdir /var/lib/tftpboot/centos7
+cp /mnt/images/pxeboot/vmlinuz  /var/lib/tftpboot/centos7
+cp /mnt/images/pxeboot/initrd.img  /var/lib/tftpboot/centos7
+
+yum install vsftpd
+cp -r /mnt/*  /var/ftp/pub/ 
+chmod -R 755 /var/ftp/pub
+
+systemctl start dnsmasq
+systemctl status dnsmasq
+systemctl start vsftpd
+systemctl status vsftpd
+systemctl enable dnsmasq
+systemctl enable vsftpd
+
+
+netstat -tulpn
+firewall-cmd --add-service=ftp --permanent  	## Port 21
+firewall-cmd --add-service=dns --permanent  	## Port 53
+firewall-cmd --add-service=dhcp --permanent  	## Port 67
+firewall-cmd --add-port=69/udp --permanent  	## Port for TFTP
+firewall-cmd --add-port=4011/udp --permanent  ## Port for ProxyDHCP
+firewall-cmd --reload  ## Apply rules
+
+
+
+ftp://192.168.86.33/pub
+tailf /var/log/messages
+umount /mnt
+
+

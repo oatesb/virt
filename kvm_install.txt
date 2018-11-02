@@ -139,7 +139,7 @@ IPADDR="192.168.86.39"
 NETMASK="255.255.255.0"
 
 
-I didn't do 3 and 4
+I didn't do 3 and 4 5
 3. Enable network forwarding. Add to /etc/sysctl.conf :
  
  
@@ -151,6 +151,11 @@ And read the file:
  
 4. Restart the ‘NetworkManager’ service so that the bridge you just created can get an IP address: 
 # systemctl restart NetworkManager 
+
+5. from https://www.youtube.com/watch?v=QGPeGdAPJXs&t=732s 9:33
+iptables -I FORWARD -m phusdev --physdev-is-bridged -j ACCEPT
+service iptables save
+service iptables restart
 
 see whitepaper on kickstart files pdf in git.
 sample kickstart files
