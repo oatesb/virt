@@ -1,0 +1,94 @@
+yum update
+yum install net-tools -y
+
+
+
+need to put the ISO on the server.
+/tmp/ol7.5/ol7.5-V975367-01.iso
+
+mount -oloop,ro /tmp/ol7.5/ol7.5-V975367-01.iso /mnt
+
+/kickstart/iso/ol7.5-V975367-01.iso
+
+
+yum install qemu-kvm virt-manager virt-install virt-viewer libvirt bridge-utils
+
+qemu-img  libvirt libvirt-python libvirt-client virt-install virt-viewer bridge-utils
+
+
+check packages rpm qa [packages]
+
+
+systemctl start libvirtd
+systemctl enable libvirtd
+
+
+
+
+
+/etc/sysconfig/network-scripts/ifcfg-br0
+TYPE=Bridge
+PROXY_METHOD=none
+BROWSER_ONLY=no
+BOOTPROTO=none
+IPADDR=10.59.34.4
+PREFIX=26
+GATEWAY=10.59.34.1
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_FAILURE_FATAL=no
+IPV6_ADDR_GEN_MODE=stable-privacy
+NAME=br0
+DEVICE=br0
+ONBOOT=yes
+MTU=1500
+
+/etc/sysconfig/network-scripts/ifcfg-bond0
+BONDING_OPTS="miimon=100 mode=802.3ad xmit_hash_policy=layer3+4"
+BRIDGE=br0
+TYPE=Bond
+BONDING_MASTER=yes
+BOOTPROTO=none
+NAME=bond0
+UUID=85097370-2d50-435d-80c0-bb01450e61b1
+DEVICE=bond0
+ONBOOT=yes
+
+
+
+
+
+backup
+BONDING_OPTS="miimon=100 mode=802.3ad xmit_hash_policy=layer3+4"
+TYPE=Bond
+BONDING_MASTER=yes
+PROXY_METHOD=none
+BROWSER_ONLY=no
+BOOTPROTO=none
+IPADDR=10.59.34.4
+PREFIX=26
+GATEWAY=10.59.34.1
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_FAILURE_FATAL=no
+IPV6_ADDR_GEN_MODE=stable-privacy
+NAME=bond0
+UUID=85097370-2d50-435d-80c0-bb01450e61b1
+DEVICE=bond0
+ONBOOT=yes
+MTU=1500
+
+
+service network restart
+####systemctl restart NetworkManager 
+
+
+osinfo-query os | grep orac
+
+virt-install --name="iad14-ocicc-vmks01" --file=/vmdisk/iad14-ocicc-vmks01.dsk --file-size=150 --nonsparse --graphics none --vcpus=2 --ram=1024 --location=/kickstart/iso/ol7.5-V975367-01.iso --network bridge=br0 --os-type=linux --os-variant=ol7.5 --extra-args="console=tty0 console=ttyS0,115200"
