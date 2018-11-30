@@ -1,0 +1,109 @@
+https://teamcity.oci.oraclecorp.com/viewType.html?buildTypeId=Vpn_VpnMain_DeployVpnApiAuthProxy_Dockerify&tab=buildTypeSettings&branch_Vpn_VpnMain_DeployVpnApiAuthProxy=__all_branches__
+https://confluence.oraclecorp.com/confluence/display/DDA/OCI+Registry
+
+	christian.chita
+		ping.pi.zhang
+
+
+General Settings
+Name: Dockerify
+ID: Vpn_VpnMain_DeployVpnApiAuthProxy_Dockerify
+Description: none
+Build configuration type: regular
+Build number format: %build.counter%, next build number: #43
+Artifact paths:
+docker_tag
+Build options:
+Enable hanging builds detection: ON
+Allow triggering personal builds: ON
+Enable status widget: OFF
+Limit the number of simultaneously running builds (0 — unlimited): unlimited
+
+============================================
+
+
+Parameters (18)
+Configuration parameters:
+Name	Value
+base-image-name	vpn-api-auth-proxy
+docker-build-directory	.
+dockerfile	Dockerfile
+path-to-pom-xml	%working-directory%/pom.xml
+pipelines-endpoint	http://pipelines.aka.lgl.grungy.us:19000
+tag	%build.number%
+working-directory	.
+System properties: none defined
+Environment variables:
+Name	Value
+env.breadcrumbs_flags	
+env.dockerbuilddirectory	%docker-build-directory%
+env.dockerfile	%dockerfile%
+env.image_with_tag	%base-image-name%:%tag%
+env.M2_HOME	%teamcity.tool.maven3_2%
+env.odo_docker_local_password	intubated retuning murmur...
+env.odo_docker_local_registry	odo-docker-local.artifactory.aka.lgl.grungy.us
+env.odo_docker_local_username	odo-auto-deployer
+env.PATH	%env.PATH%:%teamcity.tool.maven3_2%/bin
+env.path_to_pom_xml	%path-to-pom-xml%
+env.tag	%tag%
+
+
+============================================================
+
+Create container and push
+set -e ;
+set -x ;
+
+# show current directory
+pwd
+
+# show docker version
+which docker
+docker version
+
+# login to the registry
+#docker login --email='jenkins@oracle' --username='build' --password='jankybuild' https://$docker_registry
+docker login --email='pic_odo_dev_grp@oracle.com' --username="$odo_docker_local_username" \
+             --password="$odo_docker_local_password" $odo_docker_local_registry
+# TODO: Change this after the official migration. This is to support direct pushes to odo-docker-local.artifactory.oci.oraclecorp.com
+docker login --email='pic_odo_dev_grp@oracle.com' --username="$odo_docker_local_username" \
+             --password="$odo_docker_local_password" odo-docker-local.artifactory.oci.oraclecorp.com
+
+
+# build the docker image
+docker build --pull=true -t=$image_with_tag -f $dockerfile --rm=true $dockerbuilddirectory
+
+# tag it
+#docker tag $image_with_tag $docker_registry/$image_with_tag
+docker tag $image_with_tag $odo_docker_local_registry/$image_with_tag
+
+# push to the LGL and artifactory registries
+#docker push $docker_registry/$image_with_tag
+docker push $odo_docker_local_registry/$image_with_tag
+
+#preserve the "tag" so that the subsequent step can use it
+echo $tag >> docker_tag
+
+========================================================================
+
+
+
+
+clean up
+
+# We tagged and pushed. This means that our local storage space contains one
+# copy of the container like 'base-image-name:tag' and one like
+# 'repository-url/base-image-name:tag' and these two things have the same id.
+# To get rid of both, we need to run docker rmi -f $imageId twice
+
+set -x ;
+
+for imageId in $(docker images | awk '/%base-image-name%[[:space:]]*%tag%[[:space:]]/ { print $3 }');
+  do docker rmi -f $imageId;
+done;
+
+
+# docker 1.9 will remove both tags in one swoop.  so the second remove fails.
+# Ignore the second error for now, and we'll simplify this script once everything
+# is on docker 1.9
+exit 0;
